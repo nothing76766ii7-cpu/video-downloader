@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PinSave - Pinterest Video Downloader</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #e60023;
+      padding: 14px 20px;
+    }
+
+    header h1 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 30px 16px;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      color: #111;
+      margin-bottom: 10px;
+    }
+
+    .hero-sub {
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .notice {
+      background: #d4f5d4;
+      border-left: 4px solid #2ecc71;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #1a5c1a;
+    }
+
+    .notice strong { color: #145214; }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      border: 2px dashed #e60023;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+      margin-bottom: 12px;
+    }
+
+    .input-row input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #333;
+      padding: 8px 4px;
+      min-width: 0;
+    }
+
+    .paste-btn {
+      background: #e60023;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .download-btn {
+      width: 100%;
+      background: #e60023;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover { background: #c0001d; }
+    .download-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Ad slot */
+    .ad-slot {
+      background: #e8e8e8;
+      border: 1px dashed #bbb;
+      border-radius: 8px;
+      text-align: center;
+      padding: 50px 20px;
+      color: #999;
+      font-size: 13px;
+      margin: 24px 0;
+    }
+
+    /* Result card */
+    .result-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      display: none;
+    }
+
+    .result-card.show { display: block; }
+
+    .result-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      max-height: 280px;
+      object-fit: cover;
+    }
+
+    .result-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 14px;
+    }
+
+    .format-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .format-btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #e60023;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .format-btn:hover { background: #c0001d; }
+    .format-btn span { font-size: 13px; opacity: 0.85; }
+
+    .error-msg {
+      color: #e60023;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .loader {
+      text-align: center;
+      padding: 20px;
+      color: #e60023;
+      font-weight: 600;
+      display: none;
+    }
+
+    .loader.show { display: block; }
+
+    footer {
+      text-align: center;
+      padding: 30px 16px;
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* Mobile layout: stack input and button vertically on small screens */
+    @media (max-width: 480px) {
+      .input-row {
+        flex-direction: column;
+      }
+      .paste-btn {
+        width: 100%;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>PinSave</h1>
+</header>
+
+<div class="main">
+  <h2 class="hero-title">Pinterest Video Downloader</h2>
+  <p class="hero-sub">Download Pinterest videos, images, and GIFs online for free — no watermark.</p>
+
+  <div class="notice">
+    <strong>Note:</strong> Some Pins may take a moment to process.
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="urlInput" placeholder="Enter Pinterest URL..." />
+    <button class="paste-btn" onclick="pasteURL()" title="Paste">📋 Paste</button>
+  </div>
+
+  <button class="download-btn" id="fetchBtn" onclick="fetchMedia()">Download</button>
+
+  <p class="error-msg" id="errorMsg"></p>
+  <div class="loader" id="loader">Fetching media, please wait...</div>
+
+  <!-- Ad slot top -->
+  <div class="ad-slot">
+    Advertisement
+    <!-- Replace with your Google AdSense or other ad code -->
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="resultCard">
+    <img id="thumbnail" src="" alt="Thumbnail" onerror="this.style.display='none'" />
+    <p class="result-title" id="mediaTitle"></p>
+    <div class="format-list" id="formatList"></div>
+  </div>
+
+  <!-- Ad slot bottom -->
+  <div class="ad-slot">
+    Advertisement
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 PinSave · Not affiliated with Pinterest
+</footer>
+
+<script>
+  async function pasteURL() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        document.getElementById('urlInput').value = text;
+      }
+    } catch (err) {
+      // Fallback if clipboard permission is denied or unsupported
+      const input = document.getElementById('urlInput');
+      input.focus();
+      try {
+        document.execCommand('paste');
+      } catch (e) {
+        // no-op
+      }
+    }
+  }
+
+  async function fetchMedia() {
+    const url = document.getElementById('urlInput').value.trim();
+    const btn = document.getElementById('fetchBtn');
+    const loader = document.getElementById('loader');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultCard = document.getElementById('resultCard');
+
+    if (!url) {
+      errorMsg.textContent = 'Please enter a valid Pinterest URL.';
+      errorMsg.classList.add('show');
+      return;
+    }
+
+    // Reset
+    errorMsg.classList.remove('show');
+    resultCard.classList.remove('show');
+    loader.classList.add('show');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
+      // Thumbnail
+      const thumb = document.getElementById('thumbnail');
+      if (data.thumbnail) {
+        thumb.src = data.thumbnail;
+        thumb.style.display = 'block';
+      } else {
+        thumb.style.display = 'none';
+      }
+
+      // Title
+      document.getElementById('mediaTitle').textContent = data.title || 'Pinterest Media';
+
+      // Formats
+      const formatList = document.getElementById('formatList');
+      formatList.innerHTML = '';
+
+      if (data.formats && data.formats.length > 0) {
+        data.formats.forEach(f => {
+          const a = document.createElement('a');
+          a.className = 'format-btn';
+          a.href = `/api/download?url=${encodeURIComponent(f.url)}&filename=${encodeURIComponent('pinterest-' + (f.label || 'media') + '.' + (f.ext || 'mp4'))}`;
+          a.innerHTML = `Download ${f.label} <span>${(f.ext || 'MP4').toUpperCase()} · ${f.type || 'Video'}</span>`;
+          formatList.appendChild(a);
+        });
+      } else {
+        throw new Error('No downloadable media formats found for this URL.');
+      }
+
+      resultCard.classList.add('show');
+
+    } catch (err) {
+      errorMsg.textContent = err.message;
+      errorMsg.classList.add('show');
+    } finally {
+      loader.classList.remove('show');
+      btn.disabled = false;
+    }
+  }
+
+  // Enter key trigger
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') fetchMedia();
+    });
+  });
+</script>
+
+</body>
+</html>
